@@ -1,0 +1,19 @@
+vcpu:
+  virtual cpu. instructions are 16-bit.
+  
+note:
+  this is an old project.  the vcpu works but should be redesigned.
+  assembler is currently incomplete and broken.
+
+registers:
+  there are 8 registers, r0 to r7.
+
+opcodes:
+  let a and b refer to registers
+  add: 0x00ab
+  sub: 0x10ab
+  mul: 0x20ab
+  div: 0x30ab
+  jmp: 0x40nn
+  set: 0x5ann
+  mov: 0x60ab
