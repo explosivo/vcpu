@@ -13,7 +13,7 @@ void initialize()
     memory[0x205] = 0x01;
     memory[0x206] = 0xff;
     memory[0x207] = 0xff;
-    
+
     for (i = 0; i < 8; i ++)
         r[i] = 0;
 }
@@ -30,27 +30,30 @@ void cycle()
         switch(opcode & 0xf000)
         {
             case 0x0000: // add
-                r[opcode & 0x00f0] += r[opcode & 0x000f];
+                r[(opcode & 0x00f0) >> 4] += r[opcode & 0x000f];
                 pc += 2;
                 break;
             case 0x1000: // sub
-                r[opcode & 0x00f0] -= r[opcode & 0x000f];
+                r[(opcode & 0x00f0) >> 4] -= r[opcode & 0x000f];
                 pc += 2;
                 break;
             case 0x2000: // mul
-                r[opcode & 0x00f0] *= r[opcode & 0x000f];
+                r[(opcode & 0x00f0) >> 4] *= r[opcode & 0x000f];
                 pc += 2;
                 break;
             case 0x3000: // div
-                r[opcode & 0x00f0] /= r[opcode & 0x000f];
+                r[(opcode & 0x00f0) >> 4] /= r[opcode & 0x000f];
                 pc += 2;
                 break;
             case 0x4000: // jmp
                 pc = opcode & 0x00ff;
                 break;
             case 0x5000: // set
-                printf("set r%d to %d\n", (opcode & 0x0f00) >> 8, opcode & 0x00ff);
                 r[(opcode & 0x0f00) >> 8] = opcode & 0x00ff;
+                pc += 2;
+                break;
+            case 0x6000: // mov
+                r[(opcode & 0x00f0) >> 4] = r[opcode & 0x000f];
                 pc += 2;
                 break;
             case 0xf000:
