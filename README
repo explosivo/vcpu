@@ -1,6 +1,6 @@
 vcpu:
   virtual cpu. instructions are 16-bit.
-  
+
 note:
   this is an old project.  the vcpu works but should be redesigned.
   assembler is currently incomplete and broken.
@@ -17,3 +17,4 @@ opcodes:
   jmp: 0x40nn
   set: 0x5ann
   mov: 0x60ab
+
