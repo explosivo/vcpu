@@ -5,19 +5,41 @@ void initialize()
 {
     int i;
     pc = 0x200;
-    memory[0x200] = 0x50;
-    memory[0x201] = 0x0f;
-    memory[0x202] = 0x51;
-    memory[0x203] = 0xf0;
-    memory[0x204] = 0x00;
-    memory[0x205] = 0x01;
-    memory[0x206] = 0xff;
-    memory[0x207] = 0xff;
 
     for (i = 0; i < 8; i ++)
         r[i] = 0;
 }
-
+/*
+ * TODO - redesign isa.
+ * there are only 7 registers... we are wasting one bit everytime
+ * a register is represented. they do not require four bits, only
+ * three.
+ *
+ * four bits for the instruction, three bits for flags, three bits
+ * each time a register needs to be represented.
+ *
+ * op   flg Rd  Rn  Rm
+ * 0000 000 000 000 000
+ *
+ * it should be possible to store 16 bit numbers in a register.
+ * currently it is only possible to store 8 bit numbers.
+ * set a flag on the instruction, the next instruction will
+ * represent the number. there will be no need for a set instruction.
+ *
+ * i.e.
+ * source:
+ *   mov r3, #65535
+ * binary:
+ *   0110100011000000
+ *   1111111111111111
+ *
+ * source:
+ *   mov r3, r2
+ * binary:
+ *   0110000011010000
+ *
+ * ...why am i working on this?
+ */
 void cycle()
 {
     int i;
@@ -26,23 +48,26 @@ void cycle()
         for (i = 0; i < 8; i ++)
             printf("r%d = %d ", i, r[i]);
         printf("\n");
-        unsigned short opcode = opcode = memory[pc] << 8 | memory[pc + 1];
+        unsigned short opcode = memory[pc] << 8 | memory[pc + 1];
         switch(opcode & 0xf000)
         {
             case 0x0000: // add
-                r[(opcode & 0x00f0) >> 4] += r[opcode & 0x000f];
+                r[(opcode & 0x0f00) >> 8] = r[opcode & 0x00f0 >> 4] + r[opcode & 0x000f];
                 pc += 2;
                 break;
             case 0x1000: // sub
-                r[(opcode & 0x00f0) >> 4] -= r[opcode & 0x000f];
+                r[(opcode & 0x0f00) >> 8] = r[opcode & 0x00f0 >> 4] - r[opcode & 0x000f];
                 pc += 2;
                 break;
             case 0x2000: // mul
-                r[(opcode & 0x00f0) >> 4] *= r[opcode & 0x000f];
+                r[(opcode & 0x0f00) >> 8] = r[opcode & 0x00f0 >> 4] * r[opcode & 0x000f];
                 pc += 2;
                 break;
             case 0x3000: // div
-                r[(opcode & 0x00f0) >> 4] /= r[opcode & 0x000f];
+                if (r[opcode & 0x000f] != 0)
+                {
+                    r[(opcode & 0x0f00) >> 8] = r[opcode & 0x00f0 >> 4] / r[opcode & 0x000f];
+                }
                 pc += 2;
                 break;
             case 0x4000: // jmp
