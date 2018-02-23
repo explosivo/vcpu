@@ -52,33 +52,33 @@ void cycle()
         switch(opcode & 0xf000)
         {
             case 0x0000: // add
-                r[(opcode & 0x0f00) >> 8] = r[opcode & 0x00f0 >> 4] + r[opcode & 0x000f];
+                r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] + r[opcode & 07];
                 pc += 2;
                 break;
             case 0x1000: // sub
-                r[(opcode & 0x0f00) >> 8] = r[opcode & 0x00f0 >> 4] - r[opcode & 0x000f];
+                r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] - r[opcode & 07];
                 pc += 2;
                 break;
             case 0x2000: // mul
-                r[(opcode & 0x0f00) >> 8] = r[opcode & 0x00f0 >> 4] * r[opcode & 0x000f];
+                r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] * r[opcode & 07];
                 pc += 2;
                 break;
             case 0x3000: // div
-                if (r[opcode & 0x000f] != 0)
+                if (r[opcode & 07] != 0)
                 {
-                    r[(opcode & 0x0f00) >> 8] = r[opcode & 0x00f0 >> 4] / r[opcode & 0x000f];
+                    r[(opcode & 0700) >> 6] = r[opcode & 070 >> 3] / r[opcode & 07];
                 }
                 pc += 2;
                 break;
             case 0x4000: // jmp
-                pc = opcode & 0x00ff;
+                pc = memory[pc + 1] << 8 | memory[pc + 2];
                 break;
             case 0x5000: // set
-                r[(opcode & 0x0f00) >> 8] = opcode & 0x00ff;
-                pc += 2;
+                r[(opcode & 0700) >> 6] = memory[pc + 2] << 8 | memory[pc + 3];
+                pc += 4;
                 break;
             case 0x6000: // mov
-                r[(opcode & 0x00f0) >> 4] = r[opcode & 0x000f];
+                r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3];
                 pc += 2;
                 break;
             case 0xf000:
