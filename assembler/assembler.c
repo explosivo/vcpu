@@ -1,154 +1,130 @@
-#include "assembler.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-
-
-void initialize()
-{
-    
+void stripComment(char *line) {
+  char *cutoff = strchr(line, ';');
+  if (cutoff != NULL) {
+    *cutoff = '\0';
+  }
 }
 
-void removeWhitespace(char **s)
-{
-    int i, j = 0;
-    printf("this far\n");
-    for (i = 0; i < strlen(*s); i ++)
-    {
-        printf("%c\n", *s[i]);
-        if (*s[i] != ' ' || *s[i] != '\n')
-        {
-            s[0][0] = 'a';
-            printf("eh?\n");
-            j ++;
-        }
-    }
-    printf("before null\n");
-    *s[j] = '\0';
-    printf("before return\n");
+// convert r0 to 0, r1 to 1, etc.
+// returns -1 if invalid
+int regStrToInt(char *regStr) {
+  if (regStr[0] == 'r') {
+    return atoi(regStr + 1);
+  }
+  printf("syntax error. assembly failed\n");
+  exit(-1); // TODO: handle error for real
 }
 
-int parse(char *line)
-{
-    int i, j, numOfArguments = 0;
-    int success = 0;
-    unsigned short opcode, temp;
-    char *instruction, buffer[32], *arguments[4], *test;
-    printf("parsing: %s\n", line);
-    if (line[0] == ';')
-    {
-        return;
-    }
-    for (i = 0; i < strlen(line); i ++)
-    {
-        if (line[i] == ' ')
-        {
-            instruction = malloc(sizeof(char) * i);
-            for (j = 0; j <= i; j ++)
-            {
-                if (j < i)
-                {
-                    instruction[j] = line[j];
-                }
-                else
-                {
-                    instruction[j] == '\0';
-                }
-            }
-            break;
-        }
-    }
-    test = malloc(sizeof(char*) * 15);
-    test = "this is a test";
-    removeWhitespace(&test);
-    printf("%s\n", test);
-    
-    if (strcmp(instruction, "set") == 0)
-    {
-        //set(arguments);
-    }
-    free(instruction);
-    return success;
-}
-/*
-int set(char **arguments)
-{
-    opcode = 0x5000;
-    for (j = i; j < strlen(line); j ++)
-    {
-        if (line[j] == ' ')
-        {
-            i ++;
-        }
-        else if (line[j] == ',')
-        {
-            strncpy(argument, line + i, j - i);
-            if ((temp = (unsigned short) checkRegister(argument)) == 0xffff)
-            {
-                return;
-            }
-            else
-            {
-                opcode = opcode | temp;
-                break;
-            }
-        }
-    }
-    for (i = j + 1; i < strlen(line); i ++)
-    {
-        if (line[i] == ' ')
-        {
-            j ++;
-        }
-        else if (isNumber(line[i]))
-        {
-            for (j = i; j < strlen(line); j ++)
-            {
-                if ((j - i) > 2)
-                {
-                    argument[3] = '\0';
-                    break;
-                }
-                else if (isNumber(line[j]))
-                {
-                    argument[j - i] = line[j];
-                }
-                else
-                {
-                    return;
-                }
-            }
-            argument[j - i] = '\0';
-            opcode = opcode | (0x00ff & (unsigned short) (atoi(argument)));
-            success = 1;
-        }
-    }
-}*/
-
-int checkRegister(char* s)
-{
-    if (strcmp(s, "r0") == 0)
-        return 0x0000;
-    if (strcmp(s, "r1") == 0)
-        return 0x0100;
-    if (strcmp(s, "r2") == 0)
-        return 0x0200;
-    if (strcmp(s, "r3") == 0)
-        return 0x0300;
-    if (strcmp(s, "r4") == 0)
-        return 0x0400;
-    if (strcmp(s, "r5") == 0)
-        return 0x0500;
-    if (strcmp(s, "r6") == 0)
-        return 0x0600;
-    if (strcmp(s, "r7") == 0)
-        return 0x0700;
-    printf("Error: no such register \"%s\"\n", s);
-    return 0xffff;
+int findNextRegister() {
+  char *regStr;
+  regStr = strtok(NULL, " ,");
+  if (regStr == NULL) {
+    printf("syntax error. assembly failed\n");
+    exit(-1); // TODO: handle error for real
+  }
+  return regStrToInt(regStr);
 }
 
-int isNumber(char c)
-{
-    if (c > 47 && c < 58)
+int findNextConstant() {
+  char *constantStr = strtok(NULL, " ");
+  if (constantStr == NULL) {
+    printf("syntax error. assembly failed\n"); // TODO: handle error for real
+    exit(-1);
+  }
+  return atoi(constantStr);
+}
+
+void writeWord(FILE *target, unsigned short word) {
+  printf("writing: %04X\n", word);
+  fwrite(&word, sizeof(word), 1, target);
+}
+
+void encodeRType(FILE *target, int opcode) {
+  int rd, rm, rn;
+  unsigned short word;
+  rd = findNextRegister();
+  rm = findNextRegister();
+  rn = findNextRegister();
+
+  word = (opcode << 12) + (rd << 6) + (rm << 3) + rn;
+  writeWord(target, word);
+}
+
+void encodeIType(int opcode) {
+  int rd, rm, immd;
+  rd = findNextRegister();
+  rm = findNextRegister();
+  immd = findNextConstant();
+
+  (opcode << 12) + (rd << 9) + (rm << 6) + immd;
+}
+
+void encodeJType(int opcode) {
+  int immd;
+}
+
+int main(int argc, char **argv) {
+  FILE *src, *target;
+  char buffer[1024];
+  char *token, *targetName = "a.out";
+  int rd, rn, rm, immd;
+
+  if (argc == 1) {
+    printf("usage: src.s target\n");
+    printf("error: no input files\n");
+    return -1;
+  }
+
+  if (argc > 2) {
+    targetName = argv[2];
+  }
+
+  src = fopen(argv[1], "r");
+  if (src != NULL) {
+    target = fopen(targetName, "wb");
+    while(fgets(buffer, sizeof(buffer), src)) {
+      stripComment(buffer);
+      token = strtok(buffer, " ");
+
+      // if the line is empty, skip it
+      if (token == NULL) {
+        continue;
+      }
+
+      if (!strcmp(token, "add")) {
+        encodeRType(target, 0);
+      }
+      else if (!strcmp(token, "sub")) {
+        encodeRType(target, 1);
+      }
+      else if (!strcmp(token, "mul")) {
+        encodeRType(target, 2);
+      }
+      else if (!strcmp(token, "div")) {
+        encodeRType(target, 3);
+      }
+      else if (!strcmp(token, "set")) {
+        unsigned short word;
+        rd = findNextRegister();
+        immd = findNextConstant();
+        word = (5 << 12) + (rd << 9) + immd;
+        writeWord(target, word);
+      }
+      else {
+        printf("error: operation \"%s\" does not exist\n", token);
         return 1;
-    printf("Error: was expecting a number\n");
-    return 0;
+      }
+    }
+    fclose(src);
+    fclose(target);
+  }
+  else {
+    printf("vasm: input file %s does not exist\n", argv[1]);
+  }
+  return 0;
 }
+
