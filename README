@@ -3,8 +3,9 @@ vcpu:
 
 note:
   this is an old project from 2015 that was started and quickly
-  abandoned.  the vcpu works but should be redesigned.
-  the assembler is currently incomplete and broken.
+  abandoned.  the vcpu works but the design of the arch is a
+  work in progress.  i recently rewrote the assembler and got it
+  working, but it is not yet fully featured.
 
   recently, i've been occasionally working on this project again
   even though i have better things to be doing.  i don't know if
@@ -14,16 +15,49 @@ note:
 registers:
   there are 8 registers, r0 to r7.
 
-i know the isa is currently trash. this is it for now
-opcodes:
-  let a, b, and c refer to registers
-  let n be any number
+i'm still tweaking the isa.  it turns out, 16-bit instructions was
+a dumb constraint for a machine that's not even real. but i guess
+dealing with it makes it a challenge
 
-  add: 0x0abc
-  sub: 0x1abc
-  mul: 0x2abc
-  div: 0x3abc
-  jmp: 0x4abc
-  set: 0x5ann
-  mov: 0x60ab
+r-type:
+  op   flg rd  rm  rn
+  0000 000 000 000 000
+
+i-type:
+  this is where things get weird... right now, immediates are
+  contextual based on the opcode. for example, addi would use the
+  first example below, and set would use the second example below.
+  that seems really wonky and i don't like it. plus, using 6-bits
+  or 9-bits for the immediate is pretty much garbage.
+
+  op   rd  rm  immd
+  0000 000 000 000000
+
+  op   rd  immd
+  0000 000 000000000
+
+planning new i-type:
+  immediate instructions take two cycles. the first word is the
+  i-type instruction that is being decoded. the second word is the
+  immediate. using two cycles for an instuction is probably not
+  ideal, but neither is a 16-bit cpu so i'm trying to work around
+  it.
+
+  op   flg rm  rd  unused
+  0000 000 000 000 000
+  immd
+  0000000000000000
+
+j-type:
+  op   addr
+  0000 000000000000
+
+opcodes:
+  add: 0x0
+  sub: 0x1
+  mul: 0x2
+  div: 0x3
+  j  : 0x4
+  set: 0x5
+  mov: 0x6
 
