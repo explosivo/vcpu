@@ -40,7 +40,9 @@ int findNextConstant() {
 
 void writeWord(FILE *target, unsigned short word) {
   printf("writing: %04X\n", word);
-  fwrite(&word, sizeof(word), 1, target);
+  //fwrite(&word, sizeof(word), 1, target);
+  fputc(word >> 8, target);
+  fputc(word & 0x00ff, target);
 }
 
 void encodeRType(FILE *target, int opcode) {
@@ -54,13 +56,16 @@ void encodeRType(FILE *target, int opcode) {
   writeWord(target, word);
 }
 
-void encodeIType(int opcode) {
-  int rd, rm, immd;
+void encodeIType(FILE *target, int opcode) {
+  int rd, rm;
+  unsigned short word, immd;
   rd = findNextRegister();
   rm = findNextRegister();
   immd = findNextConstant();
 
-  (opcode << 12) + (rd << 9) + (rm << 6) + immd;
+  word = (opcode << 12) + (rd << 9) + (rm << 6);
+  writeWord(target, word);
+  writeWord(target, immd);
 }
 
 void encodeJType(int opcode) {
@@ -71,7 +76,8 @@ int main(int argc, char **argv) {
   FILE *src, *target;
   char buffer[1024];
   char *token, *targetName = "a.out";
-  int rd, rn, rm, immd;
+  int rd, rn, rm;
+  unsigned short immd;
 
   if (argc == 1) {
     printf("usage: src.s target\n");
@@ -87,6 +93,7 @@ int main(int argc, char **argv) {
   if (src != NULL) {
     target = fopen(targetName, "wb");
     while(fgets(buffer, sizeof(buffer), src)) {
+      printf("%s", buffer);
       stripComment(buffer);
       token = strtok(buffer, " ");
 
@@ -111,14 +118,16 @@ int main(int argc, char **argv) {
         unsigned short word;
         rd = findNextRegister();
         immd = findNextConstant();
-        word = (5 << 12) + (rd << 9) + immd;
+        word = (5 << 12) + (rd << 9);
         writeWord(target, word);
+        writeWord(target, immd);
       }
       else {
         printf("error: operation \"%s\" does not exist\n", token);
         return 1;
       }
     }
+    writeWord(target, 0xf000);
     fclose(src);
     fclose(target);
   }
