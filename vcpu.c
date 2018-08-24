@@ -1,14 +1,20 @@
 #include "vcpu.h"
-#include <stdio.h>
+#include <stdlib.h>
 
-void initialize()
-{
-    int i;
-    pc = 0x200;
+void initialize() {
+  int i;
+  pc = 0x200;
 
-    for (i = 0; i < 8; i ++)
-        r[i] = 0;
+  for (i = 0; i < 8; i ++)
+    r[i] = 0;
 }
+
+void load(FILE *fp) {
+  for(unsigned char *m = memory + 0x200; !feof(fp); m ++) {
+    *m = fgetc(fp);
+  }
+}
+
 /*
  * TODO - redesign isa.
  * there are only 7 registers... we are wasting one bit everytime
@@ -40,54 +46,50 @@ void initialize()
  *
  * ...why am i working on this?
  */
-void cycle()
-{
-    int i;
-    for (;;)
-    {
-        for (i = 0; i < 8; i ++)
-            printf("r%d = %d ", i, r[i]);
-        printf("\n");
-        unsigned short opcode = memory[pc] << 8 | memory[pc + 1];
-        switch(opcode & 0xf000)
-        {
-            case 0x0000: // add
-                r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] + r[opcode & 07];
-                pc += 2;
-                break;
-            case 0x1000: // sub
-                r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] - r[opcode & 07];
-                pc += 2;
-                break;
-            case 0x2000: // mul
-                r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] * r[opcode & 07];
-                pc += 2;
-                break;
-            case 0x3000: // div
-                if (r[opcode & 07] != 0)
-                {
-                    r[(opcode & 0700) >> 6] = r[opcode & 070 >> 3] / r[opcode & 07];
-                }
-                pc += 2;
-                break;
-            case 0x4000: // jmp
-                pc = memory[pc + 1] << 8 | memory[pc + 2];
-                break;
-            case 0x5000: // set
-                r[(opcode & 0700) >> 6] = memory[pc + 2] << 8 | memory[pc + 3];
-                pc += 4;
-                break;
-            case 0x6000: // mov
-                r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3];
-                pc += 2;
-                break;
-            case 0xf000:
-                printf("terminating\n");
-                return;
-            default:
-                printf("error: instruction %04x does not exist\n", opcode & 0xff00);
-                pc += 2;
-                break;
+void cycle() {
+  int i;
+  for (;;) {
+    for (i = 0; i < 8; i ++)
+      printf("r%d = %d ", i, r[i]);
+    printf("\n");
+    unsigned short opcode = memory[pc] << 8 | memory[pc + 1];
+    switch(opcode & 0xf000) {
+      case 0x0000: // add
+        r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] + r[opcode & 07];
+        pc += 2;
+        break;
+      case 0x1000: // sub
+        r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] - r[opcode & 07];
+        pc += 2;
+        break;
+      case 0x2000: // mul
+        r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] * r[opcode & 07];
+        pc += 2;
+        break;
+      case 0x3000: // div
+        if (r[opcode & 07] != 0) {
+          r[(opcode & 0700) >> 6] = r[opcode & 070 >> 3] / r[opcode & 07];
         }
+        pc += 2;
+        break;
+      case 0x4000: // j
+        pc = memory[pc + 1] << 8 | memory[pc + 2];
+        break;
+      case 0x5000: // set
+        r[(opcode & 07000) >> 9] = memory[pc + 2] << 8 | memory[pc + 3];
+        pc += 4;
+        break;
+      case 0x6000: // mov
+        r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3];
+        pc += 2;
+        break;
+      case 0xf000:
+        printf("terminating\n");
+        return;
+      default:
+        printf("error: instruction %04x does not exist\n", opcode & 0xff00);
+        pc += 2;
+        break;
     }
+  }
 }
