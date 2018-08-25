@@ -1,6 +1,42 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "error.h"
+
+// TODO - reorganize this into multiple files
+struct Label {
+  char *symbol;
+  unsigned int addr;
+  struct Label *next;
+};
+
+struct Word {
+  unsigned short val;
+  struct Word *next;
+};
+
+struct JumpAddress {
+  struct Word *word;
+  struct Label *label;
+  struct JumpAddress *next;
+};
+
+// TODO - rewrite to avoid global variables
+// writing dirty, will clear later
+unsigned int currentWord = 0;
+unsigned int lineNum = 1;
+struct Label *labels = NULL;
+struct Word *wordsHead = NULL, *wordsTail = NULL;
+
+void addWord(unsigned short word) {
+  if (wordsTail != NULL) {
+    struct Word *tmp = malloc(sizeof(struct Word));
+    tmp->val = word;
+    tmp->next = NULL;
+    wordsTail->next = tmp;
+    wordsTail = tmp;
+  }
+}
 
 void stripComment(char *line) {
   char *cutoff = strchr(line, ';');
@@ -15,16 +51,14 @@ int regStrToInt(char *regStr) {
   if (regStr[0] == 'r') {
     return atoi(regStr + 1);
   }
-  printf("syntax error. assembly failed\n");
-  exit(-1); // TODO: handle error for real
+  handleError(NO_REGISTER, lineNum);
 }
 
 int findNextRegister() {
   char *regStr;
   regStr = strtok(NULL, " ,");
   if (regStr == NULL) {
-    printf("syntax error. assembly failed\n");
-    exit(-1); // TODO: handle error for real
+    handleError(NO_REGISTER, lineNum);
   }
   return regStrToInt(regStr);
 }
@@ -32,17 +66,16 @@ int findNextRegister() {
 int findNextConstant() {
   char *constantStr = strtok(NULL, " ");
   if (constantStr == NULL) {
-    printf("syntax error. assembly failed\n"); // TODO: handle error for real
-    exit(-1);
+    handleError(NO_CONSTANT, lineNum);
   }
   return atoi(constantStr);
 }
 
 void writeWord(FILE *target, unsigned short word) {
   printf("writing: %04X\n", word);
-  //fwrite(&word, sizeof(word), 1, target);
   fputc(word >> 8, target);
   fputc(word & 0x00ff, target);
+  currentWord ++;
 }
 
 void encodeRType(FILE *target, int opcode) {
@@ -126,6 +159,8 @@ int main(int argc, char **argv) {
         printf("error: operation \"%s\" does not exist\n", token);
         return 1;
       }
+
+      lineNum ++;
     }
     writeWord(target, 0xf000);
     fclose(src);
