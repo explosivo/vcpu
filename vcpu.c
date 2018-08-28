@@ -22,37 +22,13 @@ short conv12SignTo16Sign(short num) {
   return 0xffff ^ 0xfff | num;
 }
 
-/*
- * TODO - redesign isa.
- * there are only 7 registers... we are wasting one bit everytime
- * a register is represented. they do not require four bits, only
- * three.
- *
- * four bits for the instruction, three bits for flags, three bits
- * each time a register needs to be represented.
- *
- * op   flg Rd  Rn  Rm
- * 0000 000 000 000 000
- *
- * it should be possible to store 16 bit numbers in a register.
- * currently it is only possible to store 8 bit numbers.
- * set a flag on the instruction, the next instruction will
- * represent the number. there will be no need for a set instruction.
- *
- * i.e.
- * source:
- *   mov r3, #65535
- * binary:
- *   0110100011000000
- *   1111111111111111
- *
- * source:
- *   mov r3, r2
- * binary:
- *   0110000011010000
- *
- * ...why am i working on this?
- */
+ int isImmediate(short word) {
+   if (word & (1 << 11)) {
+     return 1;
+   }
+   return 0;
+ }
+
 void cycle() {
   int i;
   short offset;
@@ -63,22 +39,48 @@ void cycle() {
     unsigned short opcode = memory[pc] << 8 | memory[pc + 1];
     switch(opcode & 0xf000) {
       case 0x0000: // add
-        r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] + r[opcode & 07];
-        pc += 2;
+        if (!isImmediate(opcode)) {
+          r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] + r[opcode & 07];
+          pc += 2;
+        }
+        else {
+          r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] + (memory[pc + 2] << 8 | memory[pc + 3]);
+          pc += 4;
+        }
         break;
       case 0x1000: // sub
-        r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] - r[opcode & 07];
-        pc += 2;
+        if (!isImmediate(opcode)) {
+          r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] - r[opcode & 07];
+          pc += 2;
+        }
+        else {
+          r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] - (memory[pc + 2] << 8 | memory[pc + 3]);
+          pc += 4;
+        }
         break;
       case 0x2000: // mul
-        r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] * r[opcode & 07];
-        pc += 2;
+        if (!isImmediate(opcode)) {
+          r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] * r[opcode & 07];
+          pc += 2;
+        }
+        else {
+          r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] * (memory[pc + 2] << 8 | memory[pc + 3]);
+          pc += 4;
+        }
         break;
       case 0x3000: // div
-        if (r[opcode & 07] != 0) {
-          r[(opcode & 0700) >> 6] = r[opcode & 070 >> 3] / r[opcode & 07];
+        if (!isImmediate(opcode)) {
+          if (r[opcode & 07] != 0) {
+            r[(opcode & 0700) >> 6] = r[opcode & 070 >> 3] / r[opcode & 07];
+          }
+          pc += 2;
         }
-        pc += 2;
+        else {
+          if ((memory[pc + 2] << 8 | memory[pc + 3]) != 0) {
+            r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3] / (memory[pc + 2] << 8 | memory[pc + 3]);
+          }
+          pc += 4;
+        }
         break;
       case 0x4000: // jmp
         offset = conv12SignTo16Sign(0x0fff & opcode);

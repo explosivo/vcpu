@@ -254,7 +254,7 @@ void encodeIType(int opcode) {
   rm = opcode == SET ? 0 : findNextRegister();
   immd = findNextConstant();
 
-  word = (opcode << 12) + (rd << 6) + (rm << 3);
+  word = (opcode << 12) + (1 << 11) + (rd << 6) + (rm << 3);
   addWord(word);
   addWord(immd);
 }
@@ -311,6 +311,19 @@ int main(int argc, char **argv) {
       else if (!strcmp(token, "div")) {
         encodeRType(DIV);
       }
+      else if (!strcmp(token, "addi")) {
+        encodeIType(ADD);
+      }
+      else if (!strcmp(token, "subi")) {
+        encodeIType(SUB);
+      }
+      else if (!strcmp(token, "muli")) {
+        encodeIType(MUL);
+      }
+      else if (!strcmp(token, "divi")) {
+        encodeIType(DIV);
+      }
+
       else if (!strcmp(token, "jmp")) {
         encodeJType(JMP);
       }
