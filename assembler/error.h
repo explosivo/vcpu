@@ -8,4 +8,5 @@ enum errorType {
 };
 
 void handleError(enum errorType e, unsigned int lineNum);
+
 #endif

@@ -1,6 +1,6 @@
 default:
-	gcc -c *.c
-	gcc *.o -o vasm
+	gcc -g -c *.c
+	gcc *.o -g -o vasm
 	
 clean:
 	rm -rf *.o vasm
