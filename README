@@ -55,5 +55,6 @@ todo:
   implement branch/conditional instructions
   implement stack
   implement load/store word
+  add video memory and display
   cleanup code
 
