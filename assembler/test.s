@@ -6,6 +6,7 @@ jmp start
 other:
 set r3, 8
 mul r4, r3, r3
+mov r5, r4
 jmp end
 
 start:

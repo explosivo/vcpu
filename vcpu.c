@@ -59,7 +59,7 @@ void cycle() {
   for (;;) {
     for (i = 0; i < 8; i ++)
       printf("r%d = %d ", i, r[i]);
-    printf("\n");
+    printf("pc = %d\n", pc);
     unsigned short opcode = memory[pc] << 8 | memory[pc + 1];
     switch(opcode & 0xf000) {
       case 0x0000: // add
@@ -85,7 +85,7 @@ void cycle() {
         pc += (offset + 1) * 2;
         break;
       case 0x5000: // set
-        r[(opcode & 07000) >> 9] = memory[pc + 2] << 8 | memory[pc + 3];
+        r[(opcode & 0700) >> 6] = memory[pc + 2] << 8 | memory[pc + 3];
         pc += 4;
         break;
       case 0x6000: // mov

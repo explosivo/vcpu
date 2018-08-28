@@ -5,6 +5,24 @@
 
 // TODO - reorganize this into multiple files
 
+enum opcode {
+  ADD,
+  SUB,
+  MUL,
+  DIV,
+  JMP,
+  SET,
+  MOV,
+  BNE,
+  BEQ,
+  BLT,
+  BGT,
+  BLE,
+  BGE,
+  LW,
+  SW
+};
+
 short conv12Signto16Sign(short num) {
   if (num >= 0) {
     return num;
@@ -223,7 +241,7 @@ void encodeRType(int opcode) {
   unsigned short word;
   rd = findNextRegister();
   rm = findNextRegister();
-  rn = findNextRegister();
+  rn = opcode == MOV ? 0 : findNextRegister();
 
   word = (opcode << 12) + (rd << 6) + (rm << 3) + rn;
   addWord(word);
@@ -233,10 +251,10 @@ void encodeIType(int opcode) {
   int rd, rm;
   unsigned short word, immd;
   rd = findNextRegister();
-  rm = findNextRegister();
+  rm = opcode == SET ? 0 : findNextRegister();
   immd = findNextConstant();
 
-  word = (opcode << 12) + (rd << 9) + (rm << 6);
+  word = (opcode << 12) + (rd << 6) + (rm << 3);
   addWord(word);
   addWord(immd);
 }
@@ -282,27 +300,25 @@ int main(int argc, char **argv) {
       }
 
       if (!strcmp(token, "add")) {
-        encodeRType(0);
+        encodeRType(ADD);
       }
       else if (!strcmp(token, "sub")) {
-        encodeRType(1);
+        encodeRType(SUB);
       }
       else if (!strcmp(token, "mul")) {
-        encodeRType(2);
+        encodeRType(MUL);
       }
       else if (!strcmp(token, "div")) {
-        encodeRType(3);
+        encodeRType(DIV);
       }
       else if (!strcmp(token, "jmp")) {
-        encodeJType(4);
+        encodeJType(JMP);
       }
       else if (!strcmp(token, "set")) {
-        unsigned short word;
-        rd = findNextRegister();
-        immd = findNextConstant();
-        word = (5 << 12) + (rd << 9);
-        addWord(word);
-        addWord(immd);
+        encodeIType(SET);
+      }
+      else if (!strcmp(token, "mov")) {
+        encodeRType(MOV);
       }
       else {
         printf("error: operation \"%s\" does not exist\n", token);
