@@ -15,6 +15,13 @@ void load(FILE *fp) {
   }
 }
 
+short conv12SignTo16Sign(short num) {
+  if (!(num & (1 << 11))) {
+    return num;
+  }
+  return 0xffff ^ 0xfff | num;
+}
+
 /*
  * TODO - redesign isa.
  * there are only 7 registers... we are wasting one bit everytime
@@ -48,6 +55,7 @@ void load(FILE *fp) {
  */
 void cycle() {
   int i;
+  short offset;
   for (;;) {
     for (i = 0; i < 8; i ++)
       printf("r%d = %d ", i, r[i]);
@@ -72,8 +80,9 @@ void cycle() {
         }
         pc += 2;
         break;
-      case 0x4000: // j
-        pc = memory[pc + 1] << 8 | memory[pc + 2];
+      case 0x4000: // jmp
+        offset = conv12SignTo16Sign(0x0fff & opcode);
+        pc += (offset + 1) * 2;
         break;
       case 0x5000: // set
         r[(opcode & 07000) >> 9] = memory[pc + 2] << 8 | memory[pc + 3];
