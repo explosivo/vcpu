@@ -2,15 +2,9 @@ vcpu:
   virtual cpu. instructions are 16-bit.
 
 note:
-  this is an old project from 2015 that was started and quickly
-  abandoned.  the vcpu works but the design of the arch is a
-  work in progress.  i recently rewrote the assembler and got it
-  working, but it is not yet fully featured.
-
-  recently, i've been occasionally working on this project again
-  even though i have better things to be doing.  i don't know if
-  i think this project is fun or if i'm just putting off my real
-  projects and homework.
+  the vcpu works but the design of the arch is a work in progress.
+  i recently rewrote the assembler and got it working, but it is
+  not yet fully featured.
 
 registers:
   there are 8 registers, r0 to r7.
@@ -24,24 +18,9 @@ r-type:
   0000 000 000 000 000
 
 i-type:
-  this is where things get weird... right now, immediates are
-  contextual based on the opcode. for example, addi would use the
-  first example below, and set would use the second example below.
-  that seems really wonky and i don't like it. plus, using 6-bits
-  or 9-bits for the immediate is pretty much garbage.
-
-  op   rd  rm  immd
-  0000 000 000 000000
-
-  op   rd  immd
-  0000 000 000000000
-
-planning new i-type:
   immediate instructions take two cycles. the first word is the
   i-type instruction that is being decoded. the second word is the
-  immediate. using two cycles for an instuction is probably not
-  ideal, but neither is a 16-bit cpu so i'm trying to work around
-  it.
+  immediate.
 
   op   flg rm  rd  unused
   0000 000 000 000 000
@@ -60,4 +39,20 @@ opcodes:
   jmp: 0x4
   set: 0x5
   mov: 0x6
+  bne: 0x7
+  beq: 0x8
+  blt: 0x9
+  bgt: 0xa
+  ble: 0xb
+  bge: 0xc
+  lw : 0xd
+  sw : 0xe
+
+todo:
+  implement mov
+  implement immediate versions of arithmetic instructions
+  implement branch/conditional instructions
+  implement stack
+  implement load/store word
+  cleanup code
 
