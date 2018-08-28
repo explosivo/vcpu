@@ -51,6 +51,7 @@ opcodes:
 todo:
   implement mov
   implement immediate versions of arithmetic instructions
+  fix error handling
   implement branch/conditional instructions
   implement stack
   implement load/store word
