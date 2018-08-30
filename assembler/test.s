@@ -3,12 +3,19 @@
 
 jmp start
 
+testBranching:
+set r0, 0
+testLoop:
+beq r0, r1, end
+addi r0, r0, 1
+jmp testLoop
+
 testImmd:
 addi r3, r0, 95;100
 subi r3, r3, 20;80
 divi r3, r3, 8;10
 muli r3, r3, 10;100
-jmp end
+jmp testBranching
 
 testMove:
 set r3, 8

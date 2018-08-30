@@ -36,6 +36,7 @@ void cycle() {
     for (i = 0; i < 8; i ++)
       printf("r%d = %d ", i, r[i]);
     printf("pc = %d\n", pc);
+    //getchar(); TODO: add a runtime argument to choose step through
     unsigned short opcode = memory[pc] << 8 | memory[pc + 1];
     switch(opcode & 0xf000) {
       case 0x0000: // add
@@ -93,6 +94,54 @@ void cycle() {
       case 0x6000: // mov
         r[(opcode & 0700) >> 6] = r[(opcode & 070) >> 3];
         pc += 2;
+        break;
+      case 0x7000: // bne
+        if (r[(opcode & 0700) >> 6] != r[(opcode & 070) >> 3]) {
+          pc += 2;
+        }
+        else {
+          pc += 4;
+        }
+        break;
+      case 0x8000: // beq
+        if (r[(opcode & 0700) >> 6] == r[(opcode & 070) >> 3]) {
+          pc += 2;
+        }
+        else {
+          pc += 4;
+        }
+        break;
+      case 0x9000: // blt
+        if (r[(opcode & 0700) >> 6] < r[(opcode & 070) >> 3]) {
+          pc += 2;
+        }
+        else {
+          pc += 4;
+        }
+        break;
+      case 0xa000: // bgt
+        if (r[(opcode & 0700) >> 6] > r[(opcode & 070) >> 3]) {
+          pc += 2;
+        }
+        else {
+          pc += 4;
+        }
+        break;
+      case 0xb000: // ble
+        if (r[(opcode & 0700) >> 6] <= r[(opcode & 070) >> 3]) {
+          pc += 2;
+        }
+        else {
+          pc += 4;
+        }
+        break;
+      case 0xc000: // bge
+        if (r[(opcode & 0700) >> 6] >= r[(opcode & 070) >> 3]) {
+          pc += 2;
+        }
+        else {
+          pc += 4;
+        }
         break;
       case 0xf000:
         printf("terminating\n");

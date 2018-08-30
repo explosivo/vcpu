@@ -51,7 +51,7 @@ struct JumpAddress {
 // TODO - rewrite to avoid global variables
 // writing dirty, will clear later
 unsigned int wordPos = 0;
-unsigned int lineNum = 1;
+unsigned int lineNum = 0;
 struct Label *labels = NULL;
 struct Word *wordsHead = NULL, *wordsTail = NULL;
 struct JumpAddress *jumpAddrs = NULL;
@@ -238,10 +238,11 @@ void writeWords(FILE *target) {
 
 void encodeRType(int opcode) {
   int rd, rm, rn;
+  int useRn = (opcode != MOV) && (opcode < BNE && opcode > BGE);
   unsigned short word;
   rd = findNextRegister();
   rm = findNextRegister();
-  rn = opcode == MOV ? 0 : findNextRegister();
+  rn = useRn ? findNextRegister() : 0;
 
   word = (opcode << 12) + (rd << 6) + (rm << 3) + rn;
   addWord(word);
@@ -249,9 +250,10 @@ void encodeRType(int opcode) {
 
 void encodeIType(int opcode) {
   int rd, rm;
+  int useRm = (opcode != SET);
   unsigned short word, immd;
   rd = findNextRegister();
-  rm = opcode == SET ? 0 : findNextRegister();
+  rm = useRm ? findNextRegister() : 0;
   immd = findNextConstant();
 
   word = (opcode << 12) + (1 << 11) + (rd << 6) + (rm << 3);
@@ -266,6 +268,8 @@ void encodeJType(int opcode) {
   addWord(word);
   addJumpAddress(wordsTail, symbol);
 }
+
+
 
 int main(int argc, char **argv) {
   FILE *src, *target;
@@ -323,7 +327,6 @@ int main(int argc, char **argv) {
       else if (!strcmp(token, "divi")) {
         encodeIType(DIV);
       }
-
       else if (!strcmp(token, "jmp")) {
         encodeJType(JMP);
       }
@@ -332,6 +335,30 @@ int main(int argc, char **argv) {
       }
       else if (!strcmp(token, "mov")) {
         encodeRType(MOV);
+      }
+      else if (!strcmp(token, "bne")) {
+        encodeRType(BNE);
+        encodeJType(JMP);
+      }
+      else if (!strcmp(token, "beq")) {
+        encodeRType(BEQ);
+        encodeJType(JMP);
+      }
+      else if (!strcmp(token, "blt")) {
+        encodeRType(BLT);
+        encodeJType(JMP);
+      }
+      else if (!strcmp(token, "bgt")) {
+        encodeRType(BGT);
+        encodeJType(JMP);
+      }
+      else if (!strcmp(token, "ble")) {
+        encodeRType(BLE);
+        encodeJType(JMP);
+      }
+      else if (!strcmp(token, "bge")) {
+        encodeRType(BGE);
+        encodeJType(JMP);
       }
       else {
         printf("error: operation \"%s\" does not exist\n", token);
