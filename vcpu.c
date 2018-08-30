@@ -35,10 +35,9 @@ void cycle() {
   for (;;) {
     for (i = 0; i < 8; i ++)
       printf("r%d = %d ", i, r[i]);
-    printf("pc = %d", pc);
-    getchar();// TODO: add a runtime argument to choose step through
+    printf("pc = %d\n", pc);
+    //getchar(); TODO: add a runtime argument to choose step through
     unsigned short opcode = memory[pc] << 8 | memory[pc + 1];
-    printf("%04X\n", opcode);
     switch(opcode & 0xf000) {
       case 0x0000: // add
         if (!isImmediate(opcode)) {
@@ -86,12 +85,10 @@ void cycle() {
         break;
       case 0x4000: // jmp
         if (opcode & (1 << 11)) {
-          printf("abs jump\n");
           pc = (unsigned short) memory[pc + 2] << 8 | memory[pc + 3];
         }
         else {
           short offset = memory[pc + 2] << 8 | memory[pc + 3];
-          printf("rel jump: %hd\n", offset);
           pc += offset * 2;
         }
         break;
