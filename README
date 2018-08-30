@@ -22,14 +22,22 @@ i-type:
   i-type instruction that is being decoded. the second word is the
   immediate.
 
-  op   flg rm  rd  unused
+  op   flg rd  rm  unused
   0000 000 000 000 000
   immd
   0000000000000000
 
 j-type:
-  op   addr
-  0000 000000000000
+  jump instructions take two cycles. the first word is the j-type
+  instruction that is being decoded. the second word is the address.
+  the address may be either absolute or relative based on the flag.
+  if the left most bit of the flag is set to 1, the jump address is
+  absolute, otherwise it is relative.
+
+  op   flg rd  unused
+  0000 000 000 000000
+  address
+  0000000000000000
 
 opcodes:
   add: 0x0
