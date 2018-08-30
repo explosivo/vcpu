@@ -84,8 +84,13 @@ void cycle() {
         }
         break;
       case 0x4000: // jmp
-        offset = conv12SignTo16Sign(0x0fff & opcode);
-        pc += (offset + 1) * 2;
+        if (opcode & (1 << 11)) {
+          pc = (unsigned short) memory[pc + 2] << 8 | memory[pc + 3];
+        }
+        else {
+          short offset = memory[pc + 2] << 8 | memory[pc + 3];
+          pc += offset * 2;
+        }
         break;
       case 0x5000: // set
         r[(opcode & 0700) >> 6] = memory[pc + 2] << 8 | memory[pc + 3];
@@ -100,7 +105,7 @@ void cycle() {
           pc += 2;
         }
         else {
-          pc += 4;
+          pc += 6;
         }
         break;
       case 0x8000: // beq
@@ -108,7 +113,7 @@ void cycle() {
           pc += 2;
         }
         else {
-          pc += 4;
+          pc += 6;
         }
         break;
       case 0x9000: // blt
@@ -116,7 +121,7 @@ void cycle() {
           pc += 2;
         }
         else {
-          pc += 4;
+          pc += 6;
         }
         break;
       case 0xa000: // bgt
@@ -124,7 +129,7 @@ void cycle() {
           pc += 2;
         }
         else {
-          pc += 4;
+          pc += 6;
         }
         break;
       case 0xb000: // ble
@@ -132,7 +137,7 @@ void cycle() {
           pc += 2;
         }
         else {
-          pc += 4;
+          pc += 6;
         }
         break;
       case 0xc000: // bge
@@ -140,7 +145,7 @@ void cycle() {
           pc += 2;
         }
         else {
-          pc += 4;
+          pc += 6;
         }
         break;
       case 0xf000:

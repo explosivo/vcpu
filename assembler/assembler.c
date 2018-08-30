@@ -33,6 +33,7 @@ short conv12Signto16Sign(short num) {
 struct Label {
   char *symbol;
   short addr;
+  short isAbsolute;
   struct Label *next;
 };
 
@@ -42,6 +43,7 @@ struct Word {
 };
 
 struct JumpAddress {
+  struct Word *instruction;
   struct Word *word;
   short addr;
   char *symbol;
@@ -56,19 +58,21 @@ struct Label *labels = NULL;
 struct Word *wordsHead = NULL, *wordsTail = NULL;
 struct JumpAddress *jumpAddrs = NULL;
 
-void addLabel(char *symbol, short addr) {
+void addLabel(char *symbol, short addr, short isAbsolute) {
   struct Label *tmp = malloc(sizeof(struct Label));
   tmp->symbol = malloc(sizeof(char) * strlen(symbol));
   strcpy(tmp->symbol, symbol);
   tmp->addr = addr;
+  tmp->isAbsolute = isAbsolute;
   tmp->next = labels;
   labels = tmp;
 }
 
-void addJumpAddress(struct Word *word, char *symbol){
+void addJumpAddress(struct Word *instruction, struct Word *word, char *symbol){
   struct JumpAddress *tmp = malloc(sizeof(struct JumpAddress));
   tmp->symbol = malloc(sizeof(char) * strlen(symbol));
   strcpy(tmp->symbol, symbol);
+  tmp->instruction = instruction;
   tmp->word = word;
   tmp->addr = wordPos;
   tmp->next = jumpAddrs;
@@ -89,8 +93,15 @@ void fillJumpAddresses() {
   for (struct JumpAddress *jump = jumpAddrs; jump != NULL; jump = jump->next) {
     struct Label *label = getLabel(jump->symbol);
     if (label != NULL) {
-      short offset = label->addr - jump->addr;
-      jump->word->val = jump->word->val | (offset & 0x0fff);
+      if (label->isAbsolute) {
+        jump->instruction->val = jump->instruction->val | 1 << 11;
+        jump->word->val = label->addr;
+      }
+      else
+      {
+        short offset = label->addr - jump->addr + 2;
+        jump->word->val = offset;
+      }
     }
     else {
       handleError(BAD_LABEL, lineNum);
@@ -216,7 +227,7 @@ char *checkForLabel(char *line) {
   if (labelEnd != NULL) {
     *labelEnd = '\0';
     if (validLabel(line)) {
-      addLabel(line, wordPos);
+      addLabel(line, wordPos, 0);
       return labelEnd + 1;
     }
   }
@@ -266,7 +277,9 @@ void encodeJType(int opcode) {
   char *symbol = findNextSymbol();
   word = opcode << 12;
   addWord(word);
-  addJumpAddress(wordsTail, symbol);
+  struct Word *instruction = wordsTail;
+  addWord(0);
+  addJumpAddress(instruction, wordsTail, symbol);
 }
 
 
@@ -306,7 +319,7 @@ int main(int argc, char **argv) {
       if (!strcmp(token, "lab")) {
         token = strtok(NULL, " ,");
         if (validLabel(token)) {
-          addLabel(token, findNextConstant());
+          addLabel(token, findNextConstant(), 1);
         }
         else {
         handleError(BAD_LABEL, lineNum);
