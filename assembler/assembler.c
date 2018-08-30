@@ -240,7 +240,6 @@ void encodeRType(int opcode) {
   int rd, rm, rn;
   int useRn = (opcode != MOV) && (opcode < BNE && opcode > BGE);
   unsigned short word;
-  printf("useRn: %d\n", useRn);
   rd = findNextRegister();
   rm = findNextRegister();
   rn = useRn ? findNextRegister() : 0;
@@ -265,7 +264,6 @@ void encodeIType(int opcode) {
 void encodeJType(int opcode) {
   unsigned short word;
   char *symbol = findNextSymbol();
-  printf("sym: %s\n", symbol);
   word = opcode << 12;
   addWord(word);
   addJumpAddress(wordsTail, symbol);
@@ -343,9 +341,8 @@ int main(int argc, char **argv) {
         encodeJType(JMP);
       }
       else if (!strcmp(token, "beq")) {
-        printf("branch eq\n");
         encodeRType(BEQ);
-        //encodeJType(JMP);
+        encodeJType(JMP);
       }
       else if (!strcmp(token, "blt")) {
         encodeRType(BLT);
