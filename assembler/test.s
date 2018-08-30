@@ -1,6 +1,8 @@
 ; this is a test source file
 ; for the vcpu assembler
 
+lab newLabel, 0
+
 jmp start
 
 testBranching:

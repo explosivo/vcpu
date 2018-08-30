@@ -56,11 +56,11 @@ struct Label *labels = NULL;
 struct Word *wordsHead = NULL, *wordsTail = NULL;
 struct JumpAddress *jumpAddrs = NULL;
 
-void addLabel(char *symbol) {
+void addLabel(char *symbol, short addr) {
   struct Label *tmp = malloc(sizeof(struct Label));
   tmp->symbol = malloc(sizeof(char) * strlen(symbol));
   strcpy(tmp->symbol, symbol);
-  tmp->addr = wordPos;
+  tmp->addr = addr;
   tmp->next = labels;
   labels = tmp;
 }
@@ -216,7 +216,7 @@ char *checkForLabel(char *line) {
   if (labelEnd != NULL) {
     *labelEnd = '\0';
     if (validLabel(line)) {
-      addLabel(line);
+      addLabel(line, wordPos);
       return labelEnd + 1;
     }
   }
@@ -303,7 +303,16 @@ int main(int argc, char **argv) {
         continue;
       }
 
-      if (!strcmp(token, "add")) {
+      if (!strcmp(token, "lab")) {
+        token = strtok(NULL, " ,");
+        if (validLabel(token)) {
+          addLabel(token, findNextConstant());
+        }
+        else {
+        handleError(BAD_LABEL, lineNum);
+        }
+      }
+      else if (!strcmp(token, "add")) {
         encodeRType(ADD);
       }
       else if (!strcmp(token, "sub")) {
