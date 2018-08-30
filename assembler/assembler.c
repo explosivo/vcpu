@@ -99,7 +99,7 @@ void fillJumpAddresses() {
       }
       else
       {
-        short offset = label->addr - jump->addr - 1;
+        short offset = label->addr - jump->addr + 2;
         jump->word->val = offset;
       }
     }
@@ -235,6 +235,7 @@ char *checkForLabel(char *line) {
 }
 
 void writeWord(FILE *target, unsigned short word) {
+  printf("writing: %04X\n", word);
   fputc(word >> 8, target);
   fputc(word & 0x00ff, target);
   wordPos ++;

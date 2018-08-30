@@ -35,9 +35,10 @@ void cycle() {
   for (;;) {
     for (i = 0; i < 8; i ++)
       printf("r%d = %d ", i, r[i]);
-    printf("pc = %d\n", pc);
-    //getchar(); TODO: add a runtime argument to choose step through
+    printf("pc = %d", pc);
+    getchar();// TODO: add a runtime argument to choose step through
     unsigned short opcode = memory[pc] << 8 | memory[pc + 1];
+    printf("%04X\n", opcode);
     switch(opcode & 0xf000) {
       case 0x0000: // add
         if (!isImmediate(opcode)) {
@@ -84,8 +85,15 @@ void cycle() {
         }
         break;
       case 0x4000: // jmp
-        offset = conv12SignTo16Sign(0x0fff & opcode);
-        pc += (offset + 1) * 2;
+        if (opcode & (1 << 11)) {
+          printf("abs jump\n");
+          pc = (unsigned short) memory[pc + 2] << 8 | memory[pc + 3];
+        }
+        else {
+          short offset = memory[pc + 2] << 8 | memory[pc + 3];
+          printf("rel jump: %hd\n", offset);
+          pc += offset * 2;
+        }
         break;
       case 0x5000: // set
         r[(opcode & 0700) >> 6] = memory[pc + 2] << 8 | memory[pc + 3];
@@ -100,7 +108,7 @@ void cycle() {
           pc += 2;
         }
         else {
-          pc += 4;
+          pc += 6;
         }
         break;
       case 0x8000: // beq
@@ -108,7 +116,7 @@ void cycle() {
           pc += 2;
         }
         else {
-          pc += 4;
+          pc += 6;
         }
         break;
       case 0x9000: // blt
@@ -116,7 +124,7 @@ void cycle() {
           pc += 2;
         }
         else {
-          pc += 4;
+          pc += 6;
         }
         break;
       case 0xa000: // bgt
@@ -124,7 +132,7 @@ void cycle() {
           pc += 2;
         }
         else {
-          pc += 4;
+          pc += 6;
         }
         break;
       case 0xb000: // ble
@@ -132,7 +140,7 @@ void cycle() {
           pc += 2;
         }
         else {
-          pc += 4;
+          pc += 6;
         }
         break;
       case 0xc000: // bge
@@ -140,7 +148,7 @@ void cycle() {
           pc += 2;
         }
         else {
-          pc += 4;
+          pc += 6;
         }
         break;
       case 0xf000:
