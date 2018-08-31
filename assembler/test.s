@@ -5,10 +5,17 @@ lab newLabel, 0
 
 jmp start
 
+loadStore:
+sw r0, newLabel
+lw r3, newLabel
+beq r0, r3, end
+set r0, -1
+jmp end
+
 testBranching:
 set r0, 0
 testLoop:
-beq r0, r1, end
+beq r0, r1, loadStore
 addi r0, r0, 1
 jmp testLoop
 

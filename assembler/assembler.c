@@ -68,7 +68,7 @@ void addLabel(char *symbol, short addr, short isAbsolute) {
   labels = tmp;
 }
 
-void addJumpAddress(struct Word *instruction, struct Word *word, char *symbol){
+void addJumpAddress(struct Word *instruction, struct Word *word, char *symbol) {
   struct JumpAddress *tmp = malloc(sizeof(struct JumpAddress));
   tmp->symbol = malloc(sizeof(char) * strlen(symbol));
   strcpy(tmp->symbol, symbol);
@@ -274,8 +274,9 @@ void encodeIType(int opcode) {
 
 void encodeJType(int opcode) {
   unsigned short word;
+  int rd = opcode == LW || opcode == SW ? findNextRegister() : 0;
   char *symbol = findNextSymbol();
-  word = opcode << 12;
+  word = (opcode << 12) + (rd << 6);
   addWord(word);
   struct Word *instruction = wordsTail;
   addWord(0);
@@ -381,6 +382,12 @@ int main(int argc, char **argv) {
       else if (!strcmp(token, "bge")) {
         encodeRType(BGE);
         encodeJType(JMP);
+      }
+      else if (!strcmp(token, "lw")) {
+        encodeJType(LW);
+      }
+      else if (!strcmp(token, "sw")) {
+        encodeJType(SW);
       }
       else {
         printf("error: operation \"%s\" does not exist\n", token);
