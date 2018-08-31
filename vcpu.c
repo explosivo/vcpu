@@ -148,6 +148,15 @@ void cycle() {
           pc += 6;
         }
         break;
+      case 0xd000: // lw
+        r[(opcode & 0700) >> 6] = memory[memory[pc + 2] << 8 | memory[pc + 3]] << 8 | memory[memory[pc + 2] << 8 | memory[pc + 3] + 1];
+        pc += 4;
+        break;
+      case 0xe000: // sw
+        memory[memory[pc + 2] << 8 | memory[pc + 3]] = r[opcode & 0700 >> 6] >> 8;
+        memory[memory[pc + 2] << 8 | memory[pc + 3] + 1] = r[opcode & 0700 >> 6] & 0x00ff;
+        pc += 4;
+        break;
       case 0xf000:
         printf("terminating\n");
         return;
