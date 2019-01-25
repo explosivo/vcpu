@@ -3,8 +3,6 @@
 #include <string.h>
 #include "error.h"
 
-// TODO - reorganize this into multiple files
-
 enum opcode {
   ADD,
   SUB,
@@ -51,7 +49,7 @@ struct JumpAddress {
 };
 
 // TODO - rewrite to avoid global variables
-// writing dirty, will clear later
+// writing dirty, will clean later
 unsigned int wordPos = 0;
 unsigned int lineNum = 0;
 struct Label *labels = NULL;
@@ -155,7 +153,7 @@ void cleanup() {
   freeJumpAddrs(jumpAddrs);
 }
 
-// convert r0 to 0, r1 to 1, etc.
+// converts r0 to 0, r1 to 1, etc.
 // returns -1 if invalid
 int regStrToInt(char *regStr) {
   if (regStr[0] == 'r') {
