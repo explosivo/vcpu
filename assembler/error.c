@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 void handleError(enum errorType e, unsigned int lineNum) {
-  printf("error: line %d\n");
+  printf("error: line %d\n", lineNum);
   switch(e) {
     case NO_REGISTER:
       printf("expected a valid register\n");
