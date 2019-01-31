@@ -1,6 +1,8 @@
 #ifndef VCPU_H
 #define VCPU_H
 
+#include <stdio.h>
+
 unsigned char memory[4096];
 unsigned short r[8];
 unsigned short pc;
